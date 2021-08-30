@@ -1,68 +1,26 @@
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
-  name: lint-compile
+  name: mvn-deploy
   namespace: tekton-test
 spec:
   workspaces:
   - name: protosource
-  resources:
-    inputs:
-      - name: proto-git
-        type: git
   steps:
     - name: fetch-source-proto
-      image: apipipeline
+      image: apipipeline-mvn
       imagePullPolicy: IfNotPresent
       script: |
         #!/bin/bash
         ls -alt $(workspaces.protosource.path)
         rm -rf $(workspaces.protosource.path)
-        git clone https://github.azc.ext.hp.com/hp-business-platform/apisource.git -b feat/testPR $(workspaces.protosource.path)
-    - name: lint-compile-breakcheck
-      image: apipipeline
+        git clone https://github.azc.ext.hp.com/hp-business-platform/apimaven.git $(workspaces.protosource.path)
+    - name: mvn-compile-upload-pkg
+      image: apipipeline-mvn
       imagePullPolicy: IfNotPresent
       workingDir: $(workspaces.protosource.path)
       script: |
         #!/bin/bash
-        buf lint
-        buf build
-        buf breaking --against proto.bin
-
----
-apiVersion: tekton.dev/v1beta1
-kind: Task
-metadata:
-  name: build-push
-  namespace: tekton-test
-spec:
-  workspaces:
-  - name: storage
-  #resources:
-  #  inputs:
-  #    - name: proto-git
-  #      type: git
-  steps:
-    - name: build
-      image: apipipeline
-      imagePullPolicy: IfNotPresent
-      script: |
-        #!/bin/bash
-        git clone https://github.azc.ext.hp.com/hp-business-platform/sdk_generated.git /workspace/proto-gen-git
-        rm -rf /workspace/proto-gen-git/*
-        echo $(workspaces.storage.path)
-        cd $(workspaces.storage.path)
-        ls -alt $(workspaces.storage.path)
-        buf generate --template '{"version":"v1","plugins":[{"name":"go","out":"/workspace/proto-gen-git/go"}]}'
-        buf generate --template '{"version":"v1","plugins":[{"name":"java","out":"/workspace/proto-gen-git/java"}]}'
-        buf generate --template '{"version":"v1","plugins":[{"name":"js","out":"/workspace/proto-gen-git/js"}]}'
-        buf generate --template '{"version":"v1","plugins":[{"name":"doc","out":"/workspace/proto-gen-git/docs","opt":"json,doc.json"}]}'
-        buf generate --template '{"version":"v1","plugins":[{"name":"doc","out":"/workspace/proto-gen-git/docs","opt":"html,doc.html"}]}'
-        cd /workspace/proto-gen-git/
-        git config --global user.email "apipipeline.robot@hp.com"
-        git config --global user.name "robot"
-        git status
-        git add .
-        git commit -m "pipeline update"
-        git push origin master
-
+        mkdir -p /root/.m2
+        cp ./settings.xml /root/.m2/
+        mvn deploy
