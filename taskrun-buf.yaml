@@ -1,0 +1,17 @@
+apiVersion: tekton.dev/v1beta1
+kind: TaskRun
+metadata:
+  creationTimestamp: null
+  generateName: build-push-run-
+  namespace: tekton-test
+spec:
+  resources:
+    inputs:
+    - name: proto-git
+      resourceRef:
+        name: proto-git
+  serviceAccountName: build-bot
+  taskRef:
+    name: build-push
+status:
+  podName: ""

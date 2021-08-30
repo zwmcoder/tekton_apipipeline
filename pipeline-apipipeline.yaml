@@ -1,0 +1,44 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: shared-task-storage
+  namespace: tekton-test
+spec:
+  resources:
+    requests:
+      storage: 16Mi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+
+---
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: proto-api-pipeline
+  namespace: tekton-test
+spec:
+  workspaces:
+  - name: shared-data
+  resources:
+  - name: proto-source
+    type: git
+  tasks:
+  - name: api-lint-compile
+    taskRef:
+      name: lint-compile
+    workspaces:
+    - name: protosource
+      workspace: shared-data
+    resources:
+      inputs:
+        - name: proto-git
+          resource: proto-source
+  - name: api-build-push
+    runAfter:
+     - api-lint-compile
+    taskRef:
+      name: build-push
+    workspaces:
+    - name: storage
+      workspace: shared-data

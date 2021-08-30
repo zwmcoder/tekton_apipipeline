@@ -1,0 +1,26 @@
+apiVersion: tekton.dev/v1alpha1
+kind: PipelineResource
+metadata:
+  name: proto-git
+  namespace: tekton-test
+spec:
+  type: git
+  params:
+    - name: url
+      value: https://github.azc.ext.hp.com/hp-business-platform/apisource
+    - name: revision
+      value: master
+
+---
+apiVersion: tekton.dev/v1alpha1
+kind: PipelineResource
+metadata:
+  name: proto-gen-git
+  namespace: tekton-test
+spec:
+  type: git
+  params:
+    - name: url
+      value: https://github.azc.ext.hp.com/hp-business-platform/sdk_generated
+    - name: revision
+      value: master

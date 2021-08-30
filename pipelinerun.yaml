@@ -1,0 +1,16 @@
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  name: pipelinerun-api-pipeline-2
+  creationTimestamp: null
+  generateName: proto-api-pipeline-run-
+  namespace: tekton-test
+spec:
+  resources:
+    - name: proto-git
+      resourceRef:
+        name: proto-git
+  serviceAccountName: build-bot
+  pipelineRef:
+    name: proto-api-pipeline
+status: {}
